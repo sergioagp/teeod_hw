@@ -18,6 +18,24 @@ if { [llength [get_hw_axi_txns -quiet]] } {
 # Test all lite slaves.
 set wdata_1 abcd1234
 
+# Test: ENCLV_AXI
+# Create a write transaction at enclv_axi_addr address
+create_hw_axi_txn w_enclv_axi_addr [get_hw_axis $jtag_axi_master] -type write -address $enclv_axi_addr -data $wdata_1
+# Create a read transaction at enclv_axi_addr address
+create_hw_axi_txn r_enclv_axi_addr [get_hw_axis $jtag_axi_master] -type read -address $enclv_axi_addr
+# Initiate transactions
+run_hw_axi r_enclv_axi_addr
+run_hw_axi w_enclv_axi_addr
+run_hw_axi r_enclv_axi_addr
+set rdata_tmp [get_property DATA [get_hw_axi_txn r_enclv_axi_addr]]
+# Compare read data
+if { $rdata_tmp == $wdata_1 } {
+	puts "Data comparison test pass for - ENCLV_AXI"
+} else {
+	puts "Data comparison test fail for - ENCLV_AXI, expected-$wdata_1 actual-$rdata_tmp"
+	inc ec
+}
+
 # Test: TEE_AXI
 # Create a write transaction at tee_axi_addr address
 create_hw_axi_txn w_tee_axi_addr [get_hw_axis $jtag_axi_master] -type write -address $tee_axi_addr -data $wdata_1
@@ -33,24 +51,6 @@ if { $rdata_tmp == $wdata_1 } {
 	puts "Data comparison test pass for - TEE_AXI"
 } else {
 	puts "Data comparison test fail for - TEE_AXI, expected-$wdata_1 actual-$rdata_tmp"
-	inc ec
-}
-
-# Test: ENCL_AXI
-# Create a write transaction at encl_axi_addr address
-create_hw_axi_txn w_encl_axi_addr [get_hw_axis $jtag_axi_master] -type write -address $encl_axi_addr -data $wdata_1
-# Create a read transaction at encl_axi_addr address
-create_hw_axi_txn r_encl_axi_addr [get_hw_axis $jtag_axi_master] -type read -address $encl_axi_addr
-# Initiate transactions
-run_hw_axi r_encl_axi_addr
-run_hw_axi w_encl_axi_addr
-run_hw_axi r_encl_axi_addr
-set rdata_tmp [get_property DATA [get_hw_axi_txn r_encl_axi_addr]]
-# Compare read data
-if { $rdata_tmp == $wdata_1 } {
-	puts "Data comparison test pass for - ENCL_AXI"
-} else {
-	puts "Data comparison test fail for - ENCL_AXI, expected-$wdata_1 actual-$rdata_tmp"
 	inc ec
 }
 

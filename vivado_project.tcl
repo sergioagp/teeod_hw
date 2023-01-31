@@ -227,11 +227,7 @@ set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
 
 # Set 'utils_1' fileset object
 set obj [get_filesets utils_1]
-# Set 'utils_1' fileset file properties for remote files
-# None
-
-# Set 'utils_1' fileset file properties for local files
-# None
+# Empty (no sources present)
 
 # Set 'utils_1' fileset properties
 set obj [get_filesets utils_1]
@@ -557,13 +553,13 @@ proc create_hier_cell_enclave_0 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net axi_gpio_0_gpio_io_o [get_bd_pins rst_enclave_0/gpio_io_o] [get_bd_pins rst_ps8_0_100M/aux_reset_in]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins s_axi_aresetn] [get_bd_pins rst_enclave_0/s_axi_aresetn]
+  connect_bd_net -net ext_reset_in_1 [get_bd_pins ext_reset_in] [get_bd_pins rst_ps8_0_100M/ext_reset_in]
   connect_bd_net -net rst_ps8_0_100M_peripheral_aresetn [get_bd_pins peripheral_aresetn] [get_bd_pins CORTEXM1_AXI_0/SYSRESETn] [get_bd_pins ITCM_0/s_axi_aresetn] [get_bd_pins axi_smc/aresetn] [get_bd_pins axi_uartlite_0/s_axi_aresetn] [get_bd_pins rst_ps8_0_100M/peripheral_aresetn]
+  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins rst_enclave_0/s_axi_aresetn]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins CORTEXM1_AXI_0/IRQ] [get_bd_pins xlconcat_0/dout]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins CORTEXM1_AXI_0/CFGITCMEN] [get_bd_pins xlconstant_0/dout]
   connect_bd_net -net xlconstant_1_dout [get_bd_pins xlconcat_0/In1] [get_bd_pins xlconstant_1/dout]
   connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins HCLK] [get_bd_pins CORTEXM1_AXI_0/HCLK] [get_bd_pins ITCM_0/s_axi_aclk] [get_bd_pins axi_smc/aclk] [get_bd_pins axi_uartlite_0/s_axi_aclk] [get_bd_pins rst_enclave_0/s_axi_aclk] [get_bd_pins rst_ps8_0_100M/slowest_sync_clk]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins ext_reset_in] [get_bd_pins rst_ps8_0_100M/ext_reset_in]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1782,18 +1778,18 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
 
 
   # Create interface connections
+  connect_bd_intf_net -intf_net S01_AXI_1 [get_bd_intf_pins ps8_0_axi_periph/S01_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM1_FPD]
   connect_bd_intf_net -intf_net axi_uartlite_0_UART [get_bd_intf_ports uart_rtl] [get_bd_intf_pins enclave_0/uart_rtl]
-  connect_bd_intf_net -intf_net enclave_0_M02_AXI [get_bd_intf_pins enclave_0/M02_AXI] [get_bd_intf_pins teeod_ipc_0/ENCL_AXI]
+  connect_bd_intf_net -intf_net enclave_0_M02_AXI [get_bd_intf_pins enclave_0/M02_AXI] [get_bd_intf_pins teeod_ipc_0/ENCLV_AXI]
   connect_bd_intf_net -intf_net ps8_0_axi_periph_M00_AXI [get_bd_intf_pins enclave_0/S_AXI] [get_bd_intf_pins ps8_0_axi_periph/M00_AXI]
-  connect_bd_intf_net -intf_net ps8_0_axi_periph_M01_AXI [get_bd_intf_pins enclave_0/S_AXI1] [get_bd_intf_pins ps8_0_axi_periph/M01_AXI]
-  connect_bd_intf_net -intf_net ps8_0_axi_periph_M02_AXI [get_bd_intf_pins ps8_0_axi_periph/M02_AXI] [get_bd_intf_pins teeod_ipc_0/TEE_AXI]
+  connect_bd_intf_net -intf_net ps8_0_axi_periph_M01_AXI [get_bd_intf_pins ps8_0_axi_periph/M01_AXI] [get_bd_intf_pins teeod_ipc_0/TEE_AXI]
+  connect_bd_intf_net -intf_net ps8_0_axi_periph_M02_AXI [get_bd_intf_pins enclave_0/S_AXI1] [get_bd_intf_pins ps8_0_axi_periph/M02_AXI]
   connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM0_FPD [get_bd_intf_pins ps8_0_axi_periph/S00_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM0_FPD]
-  connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM1_FPD [get_bd_intf_pins ps8_0_axi_periph/S01_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM1_FPD]
 
   # Create port connections
-  connect_bd_net -net enclave_0_peripheral_aresetn [get_bd_pins enclave_0/peripheral_aresetn] [get_bd_pins teeod_ipc_0/encl_axi_aresetn]
+  connect_bd_net -net enclave_0_peripheral_aresetn [get_bd_pins enclave_0/peripheral_aresetn] [get_bd_pins teeod_ipc_0/enclv_axi_aresetn]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins enclave_0/s_axi_aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins ps8_0_axi_periph/ARESETN] [get_bd_pins ps8_0_axi_periph/M00_ARESETN] [get_bd_pins ps8_0_axi_periph/M01_ARESETN] [get_bd_pins ps8_0_axi_periph/M02_ARESETN] [get_bd_pins ps8_0_axi_periph/S00_ARESETN] [get_bd_pins ps8_0_axi_periph/S01_ARESETN] [get_bd_pins teeod_ipc_0/tee_axi_aresetn]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins enclave_0/HCLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins ps8_0_axi_periph/M01_ACLK] [get_bd_pins ps8_0_axi_periph/M02_ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/S01_ACLK] [get_bd_pins teeod_ipc_0/encl_axi_aclk] [get_bd_pins teeod_ipc_0/tee_axi_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/pl_clk0]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins enclave_0/HCLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins ps8_0_axi_periph/M01_ACLK] [get_bd_pins ps8_0_axi_periph/M02_ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/S01_ACLK] [get_bd_pins teeod_ipc_0/enclv_axi_aclk] [get_bd_pins teeod_ipc_0/tee_axi_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/pl_clk0]
   connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins enclave_0/ext_reset_in] [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0]
 
   # Create address segments
@@ -1802,21 +1798,20 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   assign_bd_address -offset 0xA0020000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs teeod_ipc_0/TEE_AXI/TEE_AXI_reg] -force
   assign_bd_address -offset 0x00000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs enclave_0/ITCM_0/axi_bram_ctrl_0/S_AXI/Mem0] -force
   assign_bd_address -offset 0x40600000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs enclave_0/axi_uartlite_0/S_AXI/Reg] -force
-  assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs teeod_ipc_0/ENCL_AXI/ENCL_AXI_reg] -force
+  assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs teeod_ipc_0/ENCLV_AXI/ENCLV_AXI_reg] -force
 
 
   # Restore current instance
   current_bd_instance $oldCurInst
 
+  validate_bd_design
   save_bd_design
-common::send_gid_msg -ssname BD::TCL -id 2050 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
-
   close_bd_design $design_name 
 }
 # End of cr_bd_design_1()
 cr_bd_design_1 ""
-set_property GENERATE_SYNTH_CHECKPOINT "0" [get_files design_1.bd ] 
 set_property REGISTERED_WITH_MANAGER "1" [get_files design_1.bd ] 
+set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files design_1.bd ] 
 
 
 # Create wrapper file for design_1.bd
@@ -1848,7 +1843,6 @@ if { $obj != "" } {
 
 }
 set obj [get_runs synth_1]
-set_property -name "incremental_checkpoint" -value "$proj_dir/vivado_project.srcs/utils_1/imports/synth_1/design_1_wrapper.dcp" -objects $obj
 set_property -name "auto_incremental_checkpoint" -value "1" -objects $obj
 set_property -name "strategy" -value "Vivado Synthesis Defaults" -objects $obj
 

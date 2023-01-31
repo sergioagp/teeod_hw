@@ -1,7 +1,7 @@
 
 `timescale 1 ns / 1 ps
 
-	module teeod_ipc_v1_0_TEE_AXI #
+	module teeod_ipc_v1_0_ENCLV_AXI #
 	(
 		// Users to add parameters here
 		parameter integer C_S_AXI_REGS_NUMBER	= 64,
@@ -1062,7 +1062,7 @@
 	// Add user logic here
 	genvar i;
 	generate
-		for(i=0; i<C_S_AXI_REGS_NUMBER; i=i+1) begin
+		for(i=0; i<C_S_AXI_REGS_NUMBER; i=i+1) begin		
 			// Assigment of the status of output regs list
 			always @( posedge S_AXI_ACLK )
 			begin
@@ -1143,6 +1143,7 @@
 	assign slv_output[61] =	slv_reg61;
 	assign slv_output[62] =	slv_reg62;
 	assign slv_output[63] =	slv_reg63;
+	
 	// User logic ends
 
 	endmodule

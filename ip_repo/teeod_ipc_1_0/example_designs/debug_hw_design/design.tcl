@@ -52,12 +52,12 @@ proc create_ipi_design { offsetfile design_name } {
 	connect_bd_net [get_bd_pins axi_peri_interconnect/M01_ARESETN] [get_bd_pins sys_reset_0/peripheral_aresetn]
 
 	# Connect all clock & reset of teeod_ipc_0 slave interfaces..
-	connect_bd_intf_net [get_bd_intf_pins axi_peri_interconnect/M00_AXI] [get_bd_intf_pins teeod_ipc_0/TEE_AXI]
+	connect_bd_intf_net [get_bd_intf_pins axi_peri_interconnect/M00_AXI] [get_bd_intf_pins teeod_ipc_0/ENCLV_AXI]
+	connect_bd_net [get_bd_pins teeod_ipc_0/enclv_axi_aclk] [get_bd_pins sys_clk_0/clk_out1]
+	connect_bd_net [get_bd_pins teeod_ipc_0/enclv_axi_aresetn] [get_bd_pins sys_reset_0/peripheral_aresetn]
+	connect_bd_intf_net [get_bd_intf_pins axi_peri_interconnect/M01_AXI] [get_bd_intf_pins teeod_ipc_0/TEE_AXI]
 	connect_bd_net [get_bd_pins teeod_ipc_0/tee_axi_aclk] [get_bd_pins sys_clk_0/clk_out1]
 	connect_bd_net [get_bd_pins teeod_ipc_0/tee_axi_aresetn] [get_bd_pins sys_reset_0/peripheral_aresetn]
-	connect_bd_intf_net [get_bd_intf_pins axi_peri_interconnect/M01_AXI] [get_bd_intf_pins teeod_ipc_0/ENCL_AXI]
-	connect_bd_net [get_bd_pins teeod_ipc_0/encl_axi_aclk] [get_bd_pins sys_clk_0/clk_out1]
-	connect_bd_net [get_bd_pins teeod_ipc_0/encl_axi_aresetn] [get_bd_pins sys_reset_0/peripheral_aresetn]
 
 
 	# Auto assign address
@@ -70,8 +70,8 @@ proc create_ipi_design { offsetfile design_name } {
 	set fp [open $offset_file "w"]
 	puts $fp "# Configuration address parameters"
 
-	set offset [get_property OFFSET [get_bd_addr_segs /jtag_axi_0/Data/SEG_teeod_ipc_0_ENCL_AXI_* ]]
-	puts $fp "set encl_axi_addr ${offset}"
+	set offset [get_property OFFSET [get_bd_addr_segs /jtag_axi_0/Data/SEG_teeod_ipc_0_ENCLV_AXI_* ]]
+	puts $fp "set enclv_axi_addr ${offset}"
 
 	set offset [get_property OFFSET [get_bd_addr_segs /jtag_axi_0/Data/SEG_teeod_ipc_0_TEE_AXI_* ]]
 	puts $fp "set tee_axi_addr ${offset}"
