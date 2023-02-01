@@ -169,15 +169,15 @@ int main()
 {
     init_platform();
 
-//    print("Starting the load of new bin to the enclave...\n\r");
-//
-//	struct enclave_tcb  enclave_0 = {.addr_rst = RST_ENCLV_ADDR, .addr_itcm=ITCM_ENCLV_ADDR, .addr_tamb=TAMB_ENCLV_ADDR};
-//	uint32_t *addr_bin=(uint32_t *) &__cm1_bin_start__;
-//	const uint32_t bin_size = &__cm1_bin_end__ - &__cm1_bin_start__;
-//	printf("Addr bin= 0x%08x, Size = %d bytes\n\r", addr_bin, bin_size);
-//	enclave_update(enclave_0.addr_itcm, addr_bin, bin_size>>2);
-//
-//	print("Load done!\n\r");
+   print("Starting the load of new bin to the enclave...\n\r");
+
+	struct enclave_tcb  enclave_0 = {.addr_rst = RST_ENCLV_ADDR, .addr_itcm=ITCM_ENCLV_ADDR, .addr_tamb=TAMB_ENCLV_ADDR};
+	uint32_t *addr_bin=(uint32_t *) &__cm1_bin_start__;
+	const uint32_t bin_size = &__cm1_bin_end__ - &__cm1_bin_start__;
+	printf("Addr bin= 0x%08x, Size = %d bytes\n\r", addr_bin, bin_size);
+	enclave_update(enclave_0.addr_itcm, addr_bin, bin_size>>2);
+
+	print("Load done!\n\r");
   TEE_Operation *op = 0x00A0000000, *op2 = 0x00A0010000;
   op->type = 6;
   op->ctx.session_id = 12345;
