@@ -18,9 +18,8 @@
 proc checkRequiredFiles { origin_dir} {
   set status true
   set files [list \
- "[file normalize "$origin_dir/helloworld.coe"]"\
- "[file normalize "$origin_dir/../../TEEOD-final/teeod-demo/teeod-proj/hw/helloworld.coe"]"\
- "[file normalize "$origin_dir/Ultra96_V2_constraints_190430.xdc"]"\
+ "[file normalize "$origin_dir/src/helloworld.coe"]"\
+ "[file normalize "$origin_dir/vivado_project/vivado_project.srcs/constrs_1/imports/src/Ultra96_V2_constraints_190430.xdc"]"\
   ]
   foreach ifile $files {
     if { ![file isfile $ifile] } {
@@ -175,8 +174,7 @@ if { $obj != {} } {
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
- [file normalize "${origin_dir}/helloworld.coe"] \
- [file normalize "${origin_dir}/../../TEEOD-final/teeod-demo/teeod-proj/hw/helloworld.coe"] \
+ [file normalize "${origin_dir}/src/helloworld.coe"] \
 ]
 add_files -norecurse -fileset $obj $files
 
@@ -200,9 +198,9 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 set obj [get_filesets constrs_1]
 
 # Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/Ultra96_V2_constraints_190430.xdc"]"
+set file "[file normalize ${origin_dir}/vivado_project/vivado_project.srcs/constrs_1/imports/src/Ultra96_V2_constraints_190430.xdc]"
 set file_added [add_files -norecurse -fileset $obj [list $file]]
-set file "$origin_dir/Ultra96_V2_constraints_190430.xdc"
+set file "$origin_dir/vivado_project/vivado_project.srcs/constrs_1/imports/src/Ultra96_V2_constraints_190430.xdc"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property -name "file_type" -value "XDC" -objects $file_obj
@@ -227,7 +225,11 @@ set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
 
 # Set 'utils_1' fileset object
 set obj [get_filesets utils_1]
-# Empty (no sources present)
+# Set 'utils_1' fileset file properties for remote files
+# None
+
+# Set 'utils_1' fileset file properties for local files
+# None
 
 # Set 'utils_1' fileset properties
 set obj [get_filesets utils_1]
@@ -347,7 +349,7 @@ proc create_hier_cell_ITCM_0 { parentCell nameHier } {
   # Create instance: blk_mem_gen_0, and set properties
   set blk_mem_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_0 ]
   set_property -dict [list \
-    CONFIG.Coe_File {/home/spereira/Projects/TEEOD-final/teeod-demo/teeod-proj/hw/helloworld.coe} \
+    CONFIG.Coe_File {/home/spereira/Projects/TEEOD/teeod-hw/src/helloworld.coe} \
     CONFIG.Enable_32bit_Address {false} \
     CONFIG.Enable_B {Use_ENB_Pin} \
     CONFIG.Load_Init_File {true} \
@@ -359,7 +361,7 @@ proc create_hier_cell_ITCM_0 { parentCell nameHier } {
     CONFIG.Register_PortB_Output_of_Memory_Primitives {false} \
     CONFIG.Use_Byte_Write_Enable {false} \
     CONFIG.Use_RSTA_Pin {false} \
-    CONFIG.Write_Depth_A {8192} \
+    CONFIG.Write_Depth_A {32768} \
     CONFIG.use_bram_block {Stand_Alone} \
   ] $blk_mem_gen_0
 
@@ -367,20 +369,20 @@ proc create_hier_cell_ITCM_0 { parentCell nameHier } {
   # Create instance: xlslice_0, and set properties
   set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
   set_property -dict [list \
-    CONFIG.DIN_FROM {14} \
+    CONFIG.DIN_FROM {16} \
     CONFIG.DIN_TO {2} \
-    CONFIG.DIN_WIDTH {16} \
-    CONFIG.DOUT_WIDTH {13} \
+    CONFIG.DIN_WIDTH {17} \
+    CONFIG.DOUT_WIDTH {15} \
   ] $xlslice_0
 
 
   # Create instance: xlslice_1, and set properties
   set xlslice_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_1 ]
   set_property -dict [list \
-    CONFIG.DIN_FROM {14} \
+    CONFIG.DIN_FROM {16} \
     CONFIG.DIN_TO {2} \
-    CONFIG.DIN_WIDTH {16} \
-    CONFIG.DOUT_WIDTH {13} \
+    CONFIG.DIN_WIDTH {17} \
+    CONFIG.DOUT_WIDTH {15} \
   ] $xlslice_1
 
 
@@ -432,6 +434,129 @@ proc create_hier_cell_ITCM_0 { parentCell nameHier } {
   current_bd_instance $oldCurInst
 }
   
+# Hierarchical cell: shared_mem
+proc create_hier_cell_shared_mem { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_shared_mem() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI1
+
+
+  # Create pins
+  create_bd_pin -dir I -type clk s_axi_aclk
+  create_bd_pin -dir I -type rst s_axi_aresetn
+
+  # Create instance: axi_bram_ctrl_0, and set properties
+  set axi_bram_ctrl_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_0 ]
+  set_property CONFIG.SINGLE_PORT_BRAM {1} $axi_bram_ctrl_0
+
+
+  # Create instance: axi_bram_ctrl_1, and set properties
+  set axi_bram_ctrl_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_1 ]
+  set_property CONFIG.SINGLE_PORT_BRAM {1} $axi_bram_ctrl_1
+
+
+  # Create instance: blk_mem_gen_0, and set properties
+  set blk_mem_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_0 ]
+  set_property -dict [list \
+    CONFIG.Enable_32bit_Address {false} \
+    CONFIG.Memory_Type {True_Dual_Port_RAM} \
+    CONFIG.Use_RSTA_Pin {true} \
+    CONFIG.Use_RSTB_Pin {true} \
+    CONFIG.use_bram_block {Stand_Alone} \
+  ] $blk_mem_gen_0
+
+
+  # Create instance: xlslice_0, and set properties
+  set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
+  set_property CONFIG.DIN_WIDTH {4} $xlslice_0
+
+
+  # Create instance: xlslice_1, and set properties
+  set xlslice_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_1 ]
+  set_property CONFIG.DIN_WIDTH {4} $xlslice_1
+
+
+  # Create instance: xlslice_2, and set properties
+  set xlslice_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_2 ]
+  set_property -dict [list \
+    CONFIG.DIN_FROM {14} \
+    CONFIG.DIN_TO {2} \
+    CONFIG.DIN_WIDTH {16} \
+  ] $xlslice_2
+
+
+  # Create instance: xlslice_3, and set properties
+  set xlslice_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_3 ]
+  set_property -dict [list \
+    CONFIG.DIN_FROM {14} \
+    CONFIG.DIN_TO {2} \
+    CONFIG.DIN_WIDTH {16} \
+  ] $xlslice_3
+
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_bram_ctrl_0/S_AXI]
+  connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins S_AXI1] [get_bd_intf_pins axi_bram_ctrl_1/S_AXI]
+
+  # Create port connections
+  connect_bd_net -net axi_bram_ctrl_0_bram_addr_a [get_bd_pins axi_bram_ctrl_0/bram_addr_a] [get_bd_pins xlslice_2/Din]
+  connect_bd_net -net axi_bram_ctrl_0_bram_clk_a [get_bd_pins axi_bram_ctrl_0/bram_clk_a] [get_bd_pins blk_mem_gen_0/clka]
+  connect_bd_net -net axi_bram_ctrl_0_bram_en_a [get_bd_pins axi_bram_ctrl_0/bram_en_a] [get_bd_pins blk_mem_gen_0/ena]
+  connect_bd_net -net axi_bram_ctrl_0_bram_rst_a [get_bd_pins axi_bram_ctrl_0/bram_rst_a] [get_bd_pins blk_mem_gen_0/rsta]
+  connect_bd_net -net axi_bram_ctrl_0_bram_we_a [get_bd_pins axi_bram_ctrl_0/bram_we_a] [get_bd_pins xlslice_0/Din]
+  connect_bd_net -net axi_bram_ctrl_0_bram_wrdata_a [get_bd_pins axi_bram_ctrl_0/bram_wrdata_a] [get_bd_pins blk_mem_gen_0/dina]
+  connect_bd_net -net axi_bram_ctrl_1_bram_addr_a [get_bd_pins axi_bram_ctrl_1/bram_addr_a] [get_bd_pins xlslice_3/Din]
+  connect_bd_net -net axi_bram_ctrl_1_bram_clk_a [get_bd_pins axi_bram_ctrl_1/bram_clk_a] [get_bd_pins blk_mem_gen_0/clkb]
+  connect_bd_net -net axi_bram_ctrl_1_bram_en_a [get_bd_pins axi_bram_ctrl_1/bram_en_a] [get_bd_pins blk_mem_gen_0/enb]
+  connect_bd_net -net axi_bram_ctrl_1_bram_rst_a [get_bd_pins axi_bram_ctrl_1/bram_rst_a] [get_bd_pins blk_mem_gen_0/rstb]
+  connect_bd_net -net axi_bram_ctrl_1_bram_we_a [get_bd_pins axi_bram_ctrl_1/bram_we_a] [get_bd_pins xlslice_1/Din]
+  connect_bd_net -net axi_bram_ctrl_1_bram_wrdata_a [get_bd_pins axi_bram_ctrl_1/bram_wrdata_a] [get_bd_pins blk_mem_gen_0/dinb]
+  connect_bd_net -net blk_mem_gen_0_douta [get_bd_pins axi_bram_ctrl_0/bram_rddata_a] [get_bd_pins blk_mem_gen_0/douta]
+  connect_bd_net -net blk_mem_gen_0_doutb [get_bd_pins axi_bram_ctrl_1/bram_rddata_a] [get_bd_pins blk_mem_gen_0/doutb]
+  connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins axi_bram_ctrl_1/s_axi_aclk]
+  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_bram_ctrl_1/s_axi_aresetn]
+  connect_bd_net -net xlslice_0_Dout [get_bd_pins blk_mem_gen_0/wea] [get_bd_pins xlslice_0/Dout]
+  connect_bd_net -net xlslice_1_Dout [get_bd_pins blk_mem_gen_0/web] [get_bd_pins xlslice_1/Dout]
+  connect_bd_net -net xlslice_2_Dout [get_bd_pins blk_mem_gen_0/addra] [get_bd_pins xlslice_2/Dout]
+  connect_bd_net -net xlslice_3_Dout [get_bd_pins blk_mem_gen_0/addrb] [get_bd_pins xlslice_3/Dout]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
 # Hierarchical cell: enclave_0
 proc create_hier_cell_enclave_0 { parentCell nameHier } {
 
@@ -469,6 +594,8 @@ proc create_hier_cell_enclave_0 { parentCell nameHier } {
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M02_AXI
 
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M03_AXI
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
 
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI1
@@ -488,7 +615,7 @@ proc create_hier_cell_enclave_0 { parentCell nameHier } {
     CONFIG.DEBUG_SEL {3} \
     CONFIG.ITCM_INIT_RAM {true} \
     CONFIG.ITCM_SIZE {"0000"} \
-    CONFIG.OS {false} \
+    CONFIG.OS {true} \
   ] $CORTEXM1_AXI_0
 
 
@@ -498,7 +625,7 @@ proc create_hier_cell_enclave_0 { parentCell nameHier } {
   # Create instance: axi_smc, and set properties
   set axi_smc [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 axi_smc ]
   set_property -dict [list \
-    CONFIG.NUM_MI {3} \
+    CONFIG.NUM_MI {4} \
     CONFIG.NUM_SI {1} \
   ] $axi_smc
 
@@ -545,6 +672,7 @@ proc create_hier_cell_enclave_0 { parentCell nameHier } {
   # Create interface connections
   connect_bd_intf_net -intf_net CORTEXM1_AXI_0_CM1_AXI3 [get_bd_intf_pins CORTEXM1_AXI_0/CM1_AXI3] [get_bd_intf_pins axi_smc/S00_AXI]
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins M02_AXI] [get_bd_intf_pins axi_smc/M02_AXI]
+  connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins M03_AXI] [get_bd_intf_pins axi_smc/M03_AXI]
   connect_bd_intf_net -intf_net axi_smc_M00_AXI [get_bd_intf_pins ITCM_0/S_AXI] [get_bd_intf_pins axi_smc/M00_AXI]
   connect_bd_intf_net -intf_net axi_smc_M01_AXI [get_bd_intf_pins axi_smc/M01_AXI] [get_bd_intf_pins axi_uartlite_0/S_AXI]
   connect_bd_intf_net -intf_net axi_uartlite_0_UART [get_bd_intf_pins uart_rtl] [get_bd_intf_pins axi_uartlite_0/UART]
@@ -606,10 +734,13 @@ proc create_hier_cell_enclave_0 { parentCell nameHier } {
   # Create instance: ps8_0_axi_periph, and set properties
   set ps8_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ps8_0_axi_periph ]
   set_property -dict [list \
-    CONFIG.NUM_MI {3} \
+    CONFIG.NUM_MI {4} \
     CONFIG.NUM_SI {2} \
   ] $ps8_0_axi_periph
 
+
+  # Create instance: shared_mem
+  create_hier_cell_shared_mem [current_bd_instance .] shared_mem
 
   # Create instance: teeod_ipc_0, and set properties
   set teeod_ipc_0 [ create_bd_cell -type ip -vlnv user.org:user:teeod_ipc:1.0 teeod_ipc_0 ]
@@ -1780,23 +1911,27 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   # Create interface connections
   connect_bd_intf_net -intf_net axi_uartlite_0_UART [get_bd_intf_ports uart_rtl] [get_bd_intf_pins enclave_0/uart_rtl]
   connect_bd_intf_net -intf_net enclave_0_M02_AXI [get_bd_intf_pins enclave_0/M02_AXI] [get_bd_intf_pins teeod_ipc_0/ENCLV_AXI]
+  connect_bd_intf_net -intf_net enclave_0_M03_AXI [get_bd_intf_pins enclave_0/M03_AXI] [get_bd_intf_pins shared_mem/S_AXI1]
   connect_bd_intf_net -intf_net ps8_0_axi_periph_M00_AXI [get_bd_intf_pins enclave_0/S_AXI] [get_bd_intf_pins ps8_0_axi_periph/M00_AXI]
   connect_bd_intf_net -intf_net ps8_0_axi_periph_M01_AXI [get_bd_intf_pins enclave_0/S_AXI1] [get_bd_intf_pins ps8_0_axi_periph/M01_AXI]
   connect_bd_intf_net -intf_net ps8_0_axi_periph_M02_AXI [get_bd_intf_pins ps8_0_axi_periph/M02_AXI] [get_bd_intf_pins teeod_ipc_0/TEE_AXI]
+  connect_bd_intf_net -intf_net ps8_0_axi_periph_M03_AXI [get_bd_intf_pins ps8_0_axi_periph/M03_AXI] [get_bd_intf_pins shared_mem/S_AXI]
   connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM0_FPD [get_bd_intf_pins ps8_0_axi_periph/S00_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM0_FPD]
   connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM1_FPD [get_bd_intf_pins ps8_0_axi_periph/S01_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM1_FPD]
 
   # Create port connections
-  connect_bd_net -net enclave_0_peripheral_aresetn [get_bd_pins enclave_0/peripheral_aresetn] [get_bd_pins teeod_ipc_0/enclv_axi_aresetn]
+  connect_bd_net -net enclave_0_peripheral_aresetn [get_bd_pins enclave_0/peripheral_aresetn] [get_bd_pins ps8_0_axi_periph/M03_ARESETN] [get_bd_pins shared_mem/s_axi_aresetn] [get_bd_pins teeod_ipc_0/enclv_axi_aresetn]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins enclave_0/s_axi_aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins ps8_0_axi_periph/ARESETN] [get_bd_pins ps8_0_axi_periph/M00_ARESETN] [get_bd_pins ps8_0_axi_periph/M01_ARESETN] [get_bd_pins ps8_0_axi_periph/M02_ARESETN] [get_bd_pins ps8_0_axi_periph/S00_ARESETN] [get_bd_pins ps8_0_axi_periph/S01_ARESETN] [get_bd_pins teeod_ipc_0/tee_axi_aresetn]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins enclave_0/HCLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins ps8_0_axi_periph/M01_ACLK] [get_bd_pins ps8_0_axi_periph/M02_ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/S01_ACLK] [get_bd_pins teeod_ipc_0/enclv_axi_aclk] [get_bd_pins teeod_ipc_0/tee_axi_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/pl_clk0]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins enclave_0/HCLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins ps8_0_axi_periph/M01_ACLK] [get_bd_pins ps8_0_axi_periph/M02_ACLK] [get_bd_pins ps8_0_axi_periph/M03_ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/S01_ACLK] [get_bd_pins shared_mem/s_axi_aclk] [get_bd_pins teeod_ipc_0/enclv_axi_aclk] [get_bd_pins teeod_ipc_0/tee_axi_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/pl_clk0]
   connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins enclave_0/ext_reset_in] [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0]
 
   # Create address segments
-  assign_bd_address -offset 0xA0000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs enclave_0/ITCM_0/axi_bram_ctrl_1/S_AXI/Mem0] -force
+  assign_bd_address -offset 0xA0030000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs shared_mem/axi_bram_ctrl_0/S_AXI/Mem0] -force
+  assign_bd_address -offset 0xB0000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs enclave_0/ITCM_0/axi_bram_ctrl_1/S_AXI/Mem0] -force
   assign_bd_address -offset 0xA0010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs enclave_0/rst_enclave_0/S_AXI/Reg] -force
   assign_bd_address -offset 0xA0020000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs teeod_ipc_0/TEE_AXI/TEE_AXI_reg] -force
-  assign_bd_address -offset 0x00000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs enclave_0/ITCM_0/axi_bram_ctrl_0/S_AXI/Mem0] -force
+  assign_bd_address -offset 0x00000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs enclave_0/ITCM_0/axi_bram_ctrl_0/S_AXI/Mem0] -force
+  assign_bd_address -offset 0xA0030000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs shared_mem/axi_bram_ctrl_1/S_AXI/Mem0] -force
   assign_bd_address -offset 0x40600000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs enclave_0/axi_uartlite_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces enclave_0/CORTEXM1_AXI_0/CM1_AXI3] [get_bd_addr_segs teeod_ipc_0/ENCLV_AXI/ENCLV_AXI_reg] -force
 
@@ -1843,6 +1978,7 @@ if { $obj != "" } {
 
 }
 set obj [get_runs synth_1]
+set_property -name "incremental_checkpoint" -value "$proj_dir/vivado_project.srcs/utils_1/imports/synth_1/design_1_wrapper.dcp" -objects $obj
 set_property -name "auto_incremental_checkpoint" -value "1" -objects $obj
 set_property -name "strategy" -value "Vivado Synthesis Defaults" -objects $obj
 
